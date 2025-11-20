@@ -10,6 +10,7 @@ pip install setuptools wheel
 python setup.py sdist bdist_wheel
 
 Prod Linux:
+sudo mkdir /var/log/eyedeea_streamer
 sudo /var/eyedeea_streamer/bin/pip install gunicorn
 gunicorn -w 4 -b 0.0.0.0:9090 stream_server:app
 
