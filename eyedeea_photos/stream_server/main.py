@@ -5,6 +5,7 @@ import threading
 from flask import Flask, Response, render_template
 from flask_socketio import SocketIO
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import cv2
 import numpy as np
@@ -37,7 +38,8 @@ class WebsiteStreamer:
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--hide-scrollbars")
         
-        self.driver = webdriver.Chrome(options=chrome_options)
+        service = Service('/usr/bin/chromedriver')
+        self.driver = webdriver.Chrome(service=service, options=chrome_options)
         self.driver.get(self.website_url)
         print(f"Browser loaded: {self.website_url}")
     
