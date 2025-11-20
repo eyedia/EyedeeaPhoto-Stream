@@ -24,8 +24,8 @@ class WebsiteStreamer:
         self.website_url = config.get('settings', 'website_url')
         self.driver = None
         self.streaming = False
-        print("Starting website streaming server.")
-        print(f"Accessing website at: {self.website_url}")
+        print("Starting Eyedeea Photos streaming server...")
+        print(f"Accessing Eyedeea Photos website at: {self.website_url}")
         self.setup_browser()
     
     def setup_browser(self):
@@ -94,7 +94,7 @@ def stream_page():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Website Live Stream</title>
+        <title>Eyedeea Photos Stream Server</title>
         <style>
             body { margin: 0; padding: 20px; background: #000; }
             #video-stream { 
