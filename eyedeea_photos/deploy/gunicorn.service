@@ -1,0 +1,13 @@
+#copy this to /etc/systemd/system/
+[Unit]
+Description=Eyedeea Photos Streaming Server
+After=network.target
+
+[Service]
+User=deb
+Group=www-data
+WorkingDirectory=/home/deb/eyedeea_photos_stream_server/EyedeeaPhoto-Stream/eyedeea_photos
+ExecStart=/path/to/venv/bin/gunicorn --access-logfile access.log --error-logfile error.log --workers 3 --bind unix:/path/to/your/project.sock wsgi:application
+
+[Install]
+WantedBy=multi-user.target

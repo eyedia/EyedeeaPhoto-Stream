@@ -38,8 +38,9 @@ class WebsiteStreamer:
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--hide-scrollbars")
         
-        service = Service('/usr/bin/chromedriver')
-        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        #service = Service('/usr/bin/chromedriver')
+        #self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.get(self.website_url)
         print(f"Browser loaded: {self.website_url}")
     
@@ -176,7 +177,7 @@ def parse_args():
 #     #streamer = WebsiteStreamer(website_url=args.url) 
 #     print("Starting website streaming server...")
 #     print("Access streams at:")
-#     print("  http://127.0.0.1:5000/stream - Video stream page")
-#     print("  http://127.0.0.1:5000/video_feed - Raw MJPEG stream")
+#     print("  http://127.0.0.1:9090/stream - Video stream page")
+#     print("  http://127.0.0.1:9090/video_feed - Raw MJPEG stream")
     
-#     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+#     socketio.run(app, host='0.0.0.0', port=9090, debug=True)
