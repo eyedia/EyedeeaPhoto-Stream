@@ -61,9 +61,9 @@ class WebsiteStreamer:
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--hide-scrollbars")
         
-        #service = Service('/usr/bin/chromedriver')
-        #self.driver = webdriver.Chrome(service=service, options=chrome_options)
-        self.driver = webdriver.Chrome(options=chrome_options)
+        service = Service('/usr/bin/chromedriver')
+        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        #self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.get(self.website_url)
         print(f"Browser loaded: {self.website_url}")
     

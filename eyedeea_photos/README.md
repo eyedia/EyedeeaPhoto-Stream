@@ -33,6 +33,7 @@ python -m venv /var/eyedeea_streamer/
 sudo /var/eyedeea_streamer/bin/pip install -r ./requirements.txt
 sudo /var/eyedeea_streamer/bin/pip install gunicorn
 sudo /var/eyedeea_streamer/bin/pip install eventlet
+sudo apt-get install ffmpeg
 
 ***5: Validate content and copy gunicorn.service ***
 cp ../deploy/gunicorn.service /etc/systemd/system/
