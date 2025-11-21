@@ -29,6 +29,28 @@ class WebsiteStreamer:
         print(f"Accessing Eyedeea Photos website at: {self.website_url}")
         self.setup_browser()
     
+    def start_ffmpeg_conversion(self, input_url):
+        """Start FFmpeg to convert MJPEG to MP4"""
+        if self.process:
+            self.process.terminate()
+
+        try:
+            self.process = subprocess.Popen([
+                'ffmpeg',
+                '-rtsp_transport', 'tcp',
+                '-i', input_url,           # Input MJPEG stream
+                '-c:v', 'libx264',         # Video codec: H.264
+                '-preset', 'ultrafast',    # Fast encoding
+                '-tune', 'zerolatency',    # Low latency
+                '-f', 'mp4',               # Output format: MP4
+                '-movflags', 'frag_keyframe+empty_moov',  # Streaming-friendly MP4
+                'pipe:1'                   # Output to stdout
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            
+            print("✅ FFmpeg conversion started")
+        except Exception as e:
+            print(f"❌ FFmpeg error: {e}")
+
     def setup_browser(self):
         """Setup headless Chrome browser"""
         chrome_options = Options()
@@ -90,6 +112,20 @@ def video_feed():
     return Response(streamer.generate_frames(),
                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
+@app.route('/video_feed')
+def streaming_video_feed():
+    """MP4 stream endpoint (for Chromecast)"""
+    mjpeg_url = '/video_feed'  # Your MJPEG source
+    
+    streamer.streaming = True
+    streamer.start_ffmpeg_conversion(mjpeg_url)
+    
+    response = Response(
+        streamer.get_frames(),
+        mimetype='video/mp4'
+    )
+    return response
+
 @app.route('/stream')
 def stream_page():
     """HTML page with embedded video stream"""
@@ -126,12 +162,12 @@ def stream_page():
             <button onclick="refreshStream()">Refresh Stream</button>
             <button onclick="toggleFullscreen()">Fullscreen</button>
         </div>
-        <img id="video-stream" src="/video_feed" alt="Live Stream">
+        <img id="video-stream" src="/streamer/video_feed" alt="Live Stream">
         
         <script>
             function refreshStream() {
                 const img = document.getElementById('video-stream');
-                img.src = '/video_feed?t=' + new Date().getTime();
+                img.src = '/streamer/video_feed?t=' + new Date().getTime();
             }
             
             function toggleFullscreen() {
