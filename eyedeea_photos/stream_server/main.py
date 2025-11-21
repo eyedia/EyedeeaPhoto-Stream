@@ -118,27 +118,32 @@ def video_feed():
 
 @app.route('/video_feed_mp4')
 def mp4_stream():
-    """MP4 stream endpoint"""
-    mjpeg_url = 'http://localhost:9090/video_feed'
-    streamer.streaming = True
+    """MP4 stream endpoint with FFmpeg conversion"""
+    
+    mjpeg_url = 'http://localhost:9090/video_feed'  # Your MJPEG source
     streamer.start_ffmpeg_conversion(mjpeg_url)
     
     def generate():
         try:
-            while streamer.streaming and streamer.process and streamer.process.poll() is None:
+            while streamer.process and streamer.process.poll() is None:
                 chunk = streamer.process.stdout.read(4096)
                 if not chunk:
                     break
                 yield chunk
         finally:
             if streamer.process:
-                streamer.process.terminate()
+                try:
+                    streamer.process.terminate()
+                    streamer.process.wait(timeout=5)
+                except Exception:
+                    streamer.process.kill()
                 streamer.process = None
     
     return Response(generate(), mimetype='video/mp4')
 
 
-@app.route('/streamer/video_feed_hls')
+
+@app.route('/video_feed_hls')
 def hls_stream():
     """HLS stream endpoint"""
     mjpeg_url = 'http://localhost:9090/video_feed'
