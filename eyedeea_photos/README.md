@@ -30,8 +30,9 @@ sudo chown www-data:www-data /home/deb/eyedeea_photos_stream_server/EyedeeaPhoto
 ***4: Prepare Python venv***
 cd /home/deb/eyedeea_photos_stream_server/EyedeeaPhoto-Stream/eyedeea_photos
 python -m venv /var/eyedeea_streamer/
-/var/eyedeea_streamer/bin/pip install -r ./requirements.txt
-/var/eyedeea_streamer/bin/pip install gunicorn
+sudo /var/eyedeea_streamer/bin/pip install -r ./requirements.txt
+sudo /var/eyedeea_streamer/bin/pip install gunicorn
+sudo /var/eyedeea_streamer/bin/pip install eventlet
 
 ***5: Validate content and copy gunicorn.service ***
 cp ../deploy/gunicorn.service /etc/systemd/system/

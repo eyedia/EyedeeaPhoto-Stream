@@ -7,7 +7,7 @@ After=network.target
 User=deb
 Group=www-data
 WorkingDirectory=/home/deb/eyedeea_photos_stream_server/EyedeeaPhoto-Stream/eyedeea_photos
-ExecStart=/var/eyedeea_streamer/bin/gunicorn --access-logfile /var/log/eyedeea_streamer/access.log --error-logfile /var/log/eyedeea_streamer/error.log --workers 3 --bind unix:/home/deb/eyedeea_photos_stream_server/EyedeeaPhoto-Stream/eyedeea_photos/eyedeea_photos.sock wsgi:application
+ExecStart=/var/eyedeea_streamer/bin/gunicorn --access-logfile /var/log/eyedeea_streamer/access.log --error-logfile /var/log/eyedeea_streamer/error.log --workers 2 --max-requests 500 --max-requests-jitter 50 --bind unix:eyedeea_photos.sock wsgi:application
 
 [Install]
 WantedBy=multi-user.target
