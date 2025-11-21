@@ -13,6 +13,7 @@ import time
 import os
 import argparse
 import configparser
+#import psutil
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -70,17 +71,19 @@ class WebsiteStreamer:
     def capture_frame(self):
         """Capture screenshot as numpy array"""
         try:
-            # Take screenshot
             screenshot = self.driver.get_screenshot_as_png()
-            
-            # Convert to numpy array
             nparr = np.frombuffer(screenshot, np.uint8)
             frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            # Release references immediately
+            del nparr
+            del screenshot
             
             return frame
         except Exception as e:
             print(f"Capture error: {e}")
             return None
+
     
     def generate_frames(self):
         """Generate video frames from website screenshots"""
@@ -115,24 +118,31 @@ def video_feed():
 
 @app.route('/video_feed_mp4')
 def mp4_stream():
-    """MP4 stream endpoint (for Chromecast)"""
-    mjpeg_url = 'http://localhost:9090/video_feed'  # Your MJPEG source
-    
+    """MP4 stream endpoint"""
+    mjpeg_url = 'http://localhost:9090/video_feed'
     streamer.streaming = True
     streamer.start_ffmpeg_conversion(mjpeg_url)
     
-    response = Response(
-        streamer.generate_frames(),
-        mimetype='video/mp4'
-    )
-    return response
+    def generate():
+        try:
+            while streamer.streaming and streamer.process and streamer.process.poll() is None:
+                chunk = streamer.process.stdout.read(4096)
+                if not chunk:
+                    break
+                yield chunk
+        finally:
+            if streamer.process:
+                streamer.process.terminate()
+                streamer.process = None
+    
+    return Response(generate(), mimetype='video/mp4')
+
 
 @app.route('/streamer/video_feed_hls')
 def hls_stream():
-    """HLS stream endpoint (best for Chromecast)"""
+    """HLS stream endpoint"""
     mjpeg_url = 'http://localhost:9090/video_feed'
     
-    # FFmpeg to HLS conversion
     process = subprocess.Popen([
         'ffmpeg',
         '-i', mjpeg_url,
@@ -146,7 +156,19 @@ def hls_stream():
         'pipe:1'
     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
-    return Response(process.stdout, mimetype='application/vnd.apple.mpegurl')
+    def generate():
+        try:
+            while process.poll() is None:
+                chunk = process.stdout.read(4096)
+                if not chunk:
+                    break
+                yield chunk
+        finally:
+            process.terminate()
+            process.wait(timeout=5)
+    
+    return Response(generate(), mimetype='application/vnd.apple.mpegurl')
+
 
 @app.route('/stream')
 def stream_page():
@@ -230,12 +252,35 @@ def parse_args():
                         help='URL of the website to stream')
     return parser.parse_args()
 
+def __del__(self):
+    self.cleanup()
+
+def cleanup(self):
+    """Clean up all resources"""
+    self.streaming = False
+    if self.driver:
+        try:
+            self.driver.quit()
+        except:
+            pass
+        self.driver = None
+    if self.process:
+        try:
+            self.process.terminate()
+            self.process.wait(timeout=5)
+        except:
+            self.process.kill()
+        self.process = None
+
+# def monitor_memory():
+#     while True:
+#         process = psutil.Process()
+#         memory_mb = process.memory_info().rss / 1024 / 1024
+#         print(f"Memory usage: {memory_mb:.1f} MB")
+#         time.sleep(30)
+
+# # Start as daemon thread
+# threading.Thread(target=monitor_memory, daemon=True).start()
+
 # if __name__ == '__main__':
-#     args = parse_args()
-#     #streamer = WebsiteStreamer(website_url=args.url) 
-#     print("Starting website streaming server...")
-#     print("Access streams at:")
-#     print("  http://127.0.0.1:9090/stream - Video stream page")
-#     print("  http://127.0.0.1:9090/video_feed - Raw MJPEG stream")
-    
 #     socketio.run(app, host='0.0.0.0', port=9090, debug=True)
