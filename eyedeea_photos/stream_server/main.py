@@ -23,6 +23,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 class WebsiteStreamer:
     def __init__(self):
         self.website_url = config.get('settings', 'website_url')
+        self.process = None
         self.driver = None
         self.streaming = False
         print("Starting Eyedeea Photos streaming server...")
@@ -112,19 +113,40 @@ def video_feed():
     return Response(streamer.generate_frames(),
                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/video_feed')
-def streaming_video_feed():
+@app.route('/video_feed_mp4')
+def mp4_stream():
     """MP4 stream endpoint (for Chromecast)"""
-    mjpeg_url = '/video_feed'  # Your MJPEG source
+    mjpeg_url = 'http://localhost:9090/video_feed'  # Your MJPEG source
     
     streamer.streaming = True
     streamer.start_ffmpeg_conversion(mjpeg_url)
     
     response = Response(
-        streamer.get_frames(),
+        streamer.generate_frames(),
         mimetype='video/mp4'
     )
     return response
+
+@app.route('/streamer/video_feed_hls')
+def hls_stream():
+    """HLS stream endpoint (best for Chromecast)"""
+    mjpeg_url = 'http://localhost:9090/video_feed'
+    
+    # FFmpeg to HLS conversion
+    process = subprocess.Popen([
+        'ffmpeg',
+        '-i', mjpeg_url,
+        '-c:v', 'libx264',
+        '-preset', 'ultrafast',
+        '-tune', 'zerolatency',
+        '-f', 'hls',
+        '-hls_time', '2',
+        '-hls_list_size', '3',
+        '-hls_flags', 'delete_segments',
+        'pipe:1'
+    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    return Response(process.stdout, mimetype='application/vnd.apple.mpegurl')
 
 @app.route('/stream')
 def stream_page():
